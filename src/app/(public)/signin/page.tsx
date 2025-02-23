@@ -5,8 +5,9 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Cookies from "js-cookie";
+import Cookies from "js-cookie"; // Importando js-cookie
 import { jwtDecode } from "jwt-decode";
+import { UUID } from "crypto";
 
 const validationSchema = z.object({
   email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
@@ -15,20 +16,16 @@ const validationSchema = z.object({
 
 interface DataResponse {
   token: string,
-  nome: string
+  nome: string,
+  id: UUID
 }
 
 type SchemaProps = z.infer<typeof validationSchema>;
 
 export default function SignIn() {
-
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
-
   const [loadingLogin, setLoadingLogin] = useState(false);
-
-
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
@@ -40,9 +37,7 @@ export default function SignIn() {
   });
 
   const onSubmit: SubmitHandler<SchemaProps> = async (data, event) => {
-
     event?.preventDefault();
-
     setLoadingLogin(true);
 
     try {
@@ -51,13 +46,14 @@ export default function SignIn() {
         senha: data.senha
       });
 
-      const { token, nome } = response.data;
+      const { token, nome, id } = response.data;
 
+      // Definindo os cookies corretamente
       Cookies.set("authToken", token, { expires: 1 });
+      Cookies.set("userId", id, { path: '/' }); // Definindo o caminho para o cookie
 
       console.log(jwtDecode(token));
-
-      console.log("Entrei");
+      console.log(Cookies.get());
 
       setTimeout(() => {
         router.push('/dashboard');
@@ -68,12 +64,11 @@ export default function SignIn() {
     }
   };
 
-  // Função para redirecionar para a página de registro
   const handleRedirectToRegister = () => {
-    setLoading(true); // Ativando o estado de carregamento
+    setLoading(true);
     setTimeout(() => {
-      router.push('/register'); // Altere '/signup' para a rota correta da sua página de registro
-    }, 1000); // Simulando um atraso de 1 segundo para o redirecionamento
+      router.push('/register');
+    }, 1000);
   };
 
   return (
