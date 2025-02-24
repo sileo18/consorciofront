@@ -17,7 +17,7 @@ const validationSchema = z.object({
 interface DataResponse {
   token: string,
   nome: string,
-  id: UUID
+  id: string
 }
 
 type SchemaProps = z.infer<typeof validationSchema>;
@@ -41,28 +41,27 @@ export default function SignIn() {
     setLoadingLogin(true);
 
     try {
-      const response = await axios.post<DataResponse>('http://localhost:8080/auth/login', {
-        email: data.email,
-        senha: data.senha
-      });
+        const response = await axios.post<DataResponse>('http://localhost:8080/auth/login', {
+            email: data.email,
+            senha: data.senha
+        }, {
+          withCredentials: true
+        }
+      );
 
-      const { token, nome, id } = response.data;
+        const { token, nome, id } = response.data;
+        
+        Cookies.set("authToken", token, { expires: 1 });
+        Cookies.set("userId", id, { path: '/' });
 
-      // Definindo os cookies corretamente
-      Cookies.set("authToken", token, { expires: 1 });
-      Cookies.set("userId", id, { path: '/' }); // Definindo o caminho para o cookie
+        //console.log(token, nome, id); 
 
-      console.log(jwtDecode(token));
-      console.log(Cookies.get());
-
-      setTimeout(() => {
         router.push('/dashboard');
-      }, 2000);
     } catch (error) {
-      setLoadingLogin(false);
-      setErrorMessage("Erro ao fazer login. Verifique suas credenciais.");
+        setLoadingLogin(false);
+        setErrorMessage("Erro ao fazer login. Verifique suas credenciais.");
     }
-  };
+};
 
   const handleRedirectToRegister = () => {
     setLoading(true);
